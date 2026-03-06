@@ -1,3 +1,4 @@
-$ pip install fastapi
-$ pip install pydantic
-$ pip install asyncio
+# Backend runtime dependencies
+fastapi
+pydantic
+uvicorn[standard]
