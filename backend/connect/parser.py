@@ -1,7 +1,11 @@
 import xml.etree.ElementTree as ET
 
 def parse_nmap_xml(xml_text: str) -> dict:
-    root = ET.fromstring(xml_text)
+    try:
+        root = ET.fromstring(xml_text)
+    except ET.ParseError as exc:
+        raise RuntimeError("Invalid Nmap XML output") from exc
+
     hosts = []
 
     for host in root.findall("host"):
@@ -14,7 +18,8 @@ def parse_nmap_xml(xml_text: str) -> dict:
             for p in ports_node.findall("port"):
                 portid = p.attrib.get("portid")
                 proto = p.attrib.get("protocol")
-                state = p.find("state").attrib.get("state")
+                state_node = p.find("state")
+                state = state_node.attrib.get("state") if state_node is not None else None
                 service_node = p.find("service")
                 service = service_node.attrib.get("name") if service_node is not None else None
                 ports_out.append({"port": portid, "proto": proto, "state": state, "service": service})
