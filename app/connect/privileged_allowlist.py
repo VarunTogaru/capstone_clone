@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import Optional
 
 ALLOWED_TIMING_FLAGS = {f"-T{level}" for level in range(6)}
 ALLOWED_SCRIPT_CATEGORIES = {"default", "safe", "vuln"}
@@ -57,7 +58,7 @@ def _is_target_token(token: str) -> bool:
     return bool(token) and not token.startswith("-")
 
 
-def _validate_script_value(value: str) -> str | None:
+def _validate_script_value(value: str) -> Optional[str]:
     categories = [part.strip() for part in value.split(",") if part.strip()]
     if not categories:
         return "Script value cannot be empty"
