@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from backend.scan.request import Request
-from backend.connect.dispatcher import run_scan_xml
-from backend.connect.parser import parse_nmap_xml
+from app.scan.request import Request
+from app.connect.dispatcher import run_scan_xml
+from app.connect.parser import parse_nmap_xml
 
 router = APIRouter(tags=["scan"])
 

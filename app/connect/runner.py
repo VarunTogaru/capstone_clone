@@ -1,6 +1,6 @@
 import asyncio
 import shutil
-from backend.scan.request import Request
+from app.scan.request import Request
 
 SCAN_TYPE_FLAGS = {
     "tcp": ["-sT"],

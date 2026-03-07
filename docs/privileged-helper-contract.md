@@ -152,7 +152,7 @@ Provide user-friendly elevated scans without running the main app as root/admin.
 
 ## Immediate Implementation Order
 
-1. Add internal interface in backend for privileged scan provider.
+1. Add internal interface in app for privileged scan provider.
 2. Build helper validator/allowlist module.
 3. Implement helper `/health`, `/validate`, `/scan`, `/cancel`.
 4. Add UI toggle for normal vs advanced scan mode.

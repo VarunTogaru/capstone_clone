@@ -6,9 +6,9 @@ import uuid
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from backend.connect.privileged_allowlist import validate_privileged_command
-from backend.connect.runner import build_nmap_args
-from backend.scan.request import Request
+from app.connect.privileged_allowlist import validate_privileged_command
+from app.connect.runner import build_nmap_args
+from app.scan.request import Request
 
 app = FastAPI(title="Nmap Insight Privileged Helper")
 
