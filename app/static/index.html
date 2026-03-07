@@ -31,6 +31,7 @@
         var(--bg);
       min-height: 100vh;
       padding: 28px 18px 48px;
+      overflow-x: hidden;
     }
 
     .shell {
@@ -54,15 +55,9 @@
       letter-spacing: 0.01em;
     }
 
-    .subtitle {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 0.98rem;
-    }
-
     .grid {
       display: grid;
-      grid-template-columns: 330px 1fr;
+      grid-template-columns: minmax(300px, 330px) minmax(0, 1fr);
       gap: 14px;
     }
 
@@ -72,6 +67,7 @@
       border-radius: 16px;
       box-shadow: var(--shadow);
       padding: 16px;
+      min-width: 0;
     }
 
     .panel h2 {
@@ -392,6 +388,99 @@
       word-break: break-word;
     }
 
+    .meta-grid {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .meta-item {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #f9fcf9;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      min-width: 0;
+    }
+
+    .meta-item strong {
+      display: block;
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .meta-value {
+      display: block;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .meta-wide {
+      grid-column: 1 / -1;
+      max-height: 120px;
+      overflow: auto;
+    }
+
+    .detail-wrap {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px;
+      max-height: 320px;
+      overflow: auto;
+    }
+
+    .host-card {
+      border: 1px solid #d9e5da;
+      border-radius: 10px;
+      background: #fafffb;
+      padding: 9px 10px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+    }
+
+    .host-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .host-title {
+      font-weight: 700;
+      font-size: 0.86rem;
+      margin-bottom: 6px;
+    }
+
+    .mini-row {
+      margin-bottom: 5px;
+      color: #2f4635;
+      overflow-wrap: anywhere;
+    }
+
+    .mini-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 4px;
+    }
+
+    .pill {
+      border: 1px solid #cfe1d1;
+      background: #eef7f0;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 0.74rem;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
     @media (max-width: 900px) {
       .grid {
         grid-template-columns: 1fr;
@@ -403,7 +492,6 @@
   <main class="shell">
     <header class="header">
       <h1 class="title">Nmap Insight</h1>
-      <p class="subtitle">Local demo UI for building a scan and viewing parsed results.</p>
     </header>
 
     <section class="grid">
@@ -447,15 +535,13 @@
                 </div>
               </label>
             </div>
-            <div class="hint">Hover an option to see what the scan type does.</div>
           </fieldset>
 
           <div class="field">
             <label class="check-item">
-              <input id="use-privileged" name="use_privileged" type="checkbox">
+              <input id="use-privileged" name="use_privileged" type="checkbox" checked>
               <code>Advanced</code> Use privileged helper mode
             </label>
-            <div class="hint">Uses local helper service for elevated scans.</div>
           </div>
 
           <div class="field">
@@ -518,6 +604,14 @@
           </table>
         </div>
 
+        <p class="section-title" style="margin-top:12px;">Scan Metadata</p>
+        <div id="scan-meta" class="meta-grid">
+          <div class="meta-item"><strong>Status</strong>Waiting for first scan.</div>
+        </div>
+
+        <p class="section-title" style="margin-top:12px;">Detection Details</p>
+        <div id="detection-body" class="detail-wrap">No detection details yet.</div>
+
         <p class="section-title" style="margin-top:12px;">Raw JSON</p>
         <pre id="raw-json" class="raw">{}</pre>
       </article>
@@ -530,6 +624,8 @@
     const commandChip = document.getElementById("command-chip");
     const rawJson = document.getElementById("raw-json");
     const resultBody = document.getElementById("result-body");
+    const scanMeta = document.getElementById("scan-meta");
+    const detectionBody = document.getElementById("detection-body");
     const runBtn = document.getElementById("run-btn");
     const clearBtn = document.getElementById("clear-btn");
     const beginnerFlagsNode = document.getElementById("beginner-flags");
@@ -898,16 +994,153 @@
         for (const port of ports) {
           rows.push(`
             <tr>
-              <td>${host.address || "-"}</td>
-              <td>${port.port || "-"}</td>
-              <td>${port.proto || "-"}</td>
-              <td>${port.state || "-"}</td>
-              <td>${port.service || "-"}</td>
+              <td>${escapeHtml(host.address || "-")}</td>
+              <td>${escapeHtml(port.port || "-")}</td>
+              <td>${escapeHtml(port.proto || "-")}</td>
+              <td>${escapeHtml(port.state || "-")}</td>
+              <td>${escapeHtml(port.service || "-")}</td>
             </tr>
           `);
         }
       }
       resultBody.innerHTML = rows.length ? rows.join("") : `<tr><td colspan="5">No hosts returned.</td></tr>`;
+    }
+
+    function textList(values) {
+      return values && values.length ? values.join(", ") : "-";
+    }
+
+    function flattenScriptDetails(nodes, prefix = "") {
+      const lines = [];
+      for (const node of nodes || []) {
+        const labelBits = [prefix, node.tag, node.key].filter(Boolean);
+        const label = labelBits.join("/");
+        if (node.text) lines.push(`${label}: ${node.text}`);
+        if (node.children?.length) {
+          lines.push(...flattenScriptDetails(node.children, label));
+        }
+      }
+      return lines;
+    }
+
+    function summarizeScript(script) {
+      const head = `${script.id || "script"}${script.output ? `: ${script.output}` : ""}`.trim();
+      const detailLines = flattenScriptDetails(script.details || []);
+      if (!detailLines.length) return head;
+      const detailText = detailLines.slice(0, 2).join(" | ");
+      return `${head} [${detailText}]`;
+    }
+
+    function renderMeta(data) {
+      const metadata = data.metadata || {};
+      const runstats = data.runstats || {};
+      const hosts = runstats.hosts || {};
+      const finished = runstats.finished || {};
+      const scaninfo = (metadata.scaninfo || []).map((item) => {
+        return `${item.type || "?"}/${item.protocol || "?"} ${item.services || ""}`.trim();
+      }).filter(Boolean);
+      const items = [
+        ["Scanner", metadata.scanner || "-"],
+        ["Version", metadata.version || "-"],
+        ["Args", metadata.args || "-"],
+        ["Scan Info", textList(scaninfo)],
+        ["Hosts Up", hosts.up || "-"],
+        ["Hosts Down", hosts.down || "-"],
+        ["Hosts Total", hosts.total || "-"],
+        ["Finished Time", finished.timestr || finished.time || "-"],
+        ["Summary", finished.summary || "-"],
+      ];
+      scanMeta.innerHTML = items.map(([label, value]) => `
+        <div class="meta-item ${label === "Scan Info" ? "meta-wide" : ""}">
+          <strong>${escapeHtml(label)}</strong>
+          <span class="meta-value">${escapeHtml(value)}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderDetections(data) {
+      const hosts = data.hosts || [];
+      if (!hosts.length) {
+        detectionBody.textContent = "No host detection details.";
+        return;
+      }
+
+      const cards = hosts.map((host, index) => {
+        const hostnames = (host.hostnames || []).map((item) => item.name).filter(Boolean);
+        const addresses = (host.addresses || []).map((item) => `${item.addrtype || "addr"}:${item.addr || "-"}`);
+        const osMatches = (host.os?.matches || []).map((item) => `${item.name || "unknown"} (${item.accuracy || "?"}%)`);
+        const osClasses = (host.os?.classes || []).map((item) => {
+          return [item.vendor, item.osfamily, item.osgen, item.type].filter(Boolean).join(" ");
+        }).filter(Boolean);
+        const osPortsUsed = (host.os?.ports_used || []).map((item) => {
+          return `${item.proto || "?"}/${item.portid || "?"} ${item.state || ""}`.trim();
+        });
+        const hostScripts = (host.hostscripts || []).map((item) => summarizeScript(item));
+        const trace = (host.trace || []).map((hop) => `${hop.ttl || "?"}:${hop.ipaddr || hop.host || "-"}`);
+        const sequenceBits = [];
+        if (host.sequence?.tcp?.difficulty || host.sequence?.tcp?.values) {
+          sequenceBits.push(`tcp:${host.sequence.tcp.difficulty || host.sequence.tcp.values}`);
+        }
+        if (host.sequence?.ipid?.class || host.sequence?.ipid?.values) {
+          sequenceBits.push(`ipid:${host.sequence.ipid.class || host.sequence.ipid.values}`);
+        }
+        if (host.sequence?.tcpts?.class || host.sequence?.tcpts?.values) {
+          sequenceBits.push(`ts:${host.sequence.tcpts.class || host.sequence.tcpts.values}`);
+        }
+
+        const detailedPorts = (host.ports || []).filter((port) => {
+          const hasServiceDetail = port.service_detail && Object.keys(port.service_detail).length > 0;
+          const hasStateDetail = port.state_detail && Object.keys(port.state_detail).length > 0;
+          const hasScripts = port.scripts && port.scripts.length > 0;
+          return hasServiceDetail || hasStateDetail || hasScripts;
+        });
+
+        const portPills = detailedPorts.map((port) => {
+          const serviceBits = [
+            port.service_detail?.name,
+            port.service_detail?.product,
+            port.service_detail?.version,
+            port.service_detail?.extrainfo,
+            (port.service_detail?.cpe || []).join("|"),
+          ].filter(Boolean).join(" ");
+          const stateBits = [
+            port.state_detail?.state,
+            port.state_detail?.reason,
+          ].filter(Boolean).join("/");
+          const scriptBits = (port.scripts || []).map((script) => summarizeScript(script)).filter(Boolean).join(" | ");
+          const text = [
+            serviceBits,
+            stateBits ? `state:${stateBits}` : "",
+            scriptBits ? `scripts:${scriptBits}` : "",
+          ].filter(Boolean).join(" ");
+          return `<span class="pill">${escapeHtml(`${port.proto || "?"}/${port.port || "?"} ${text}`.trim())}</span>`;
+        }).join("");
+
+        return `
+          <div class="host-card">
+            <div class="host-title">Host ${index + 1}: ${escapeHtml(host.address || "unknown")}</div>
+            <div class="mini-row"><strong>Status:</strong> ${escapeHtml(host.status?.state || "-")} (${escapeHtml(host.status?.reason || "-")})</div>
+            <div class="mini-row"><strong>Hostnames:</strong> ${escapeHtml(textList(hostnames))}</div>
+            <div class="mini-row"><strong>Addresses:</strong> ${escapeHtml(textList(addresses))}</div>
+            <div class="mini-row"><strong>OS Matches:</strong> ${escapeHtml(textList(osMatches))}</div>
+            <div class="mini-row"><strong>OS Classes:</strong> ${escapeHtml(textList(osClasses))}</div>
+            <div class="mini-row"><strong>OS Ports Used:</strong> ${escapeHtml(textList(osPortsUsed))}</div>
+            <div class="mini-row"><strong>OS Fingerprint:</strong> ${escapeHtml(host.os?.fingerprint || "-")}</div>
+            <div class="mini-row"><strong>Uptime:</strong> ${escapeHtml(host.uptime?.seconds || "-")}s</div>
+            <div class="mini-row"><strong>Distance:</strong> ${escapeHtml(host.distance?.value || "-")} hops</div>
+            <div class="mini-row"><strong>Timing:</strong> ${escapeHtml(host.times?.srtt || "-")} srtt / ${escapeHtml(host.times?.rttvar || "-")} rttvar / ${escapeHtml(host.times?.to || "-")} timeout</div>
+            <div class="mini-row"><strong>Sequence:</strong> ${escapeHtml(textList(sequenceBits))}</div>
+            <div class="mini-row"><strong>Trace Meta:</strong> ${escapeHtml(`${host.trace_meta?.proto || "-"}:${host.trace_meta?.port || "-"}`)}</div>
+            <div class="mini-row"><strong>Trace:</strong> ${escapeHtml(textList(trace))}</div>
+            <div class="mini-row"><strong>Host Scripts:</strong> ${escapeHtml(textList(hostScripts))}</div>
+            <div class="mini-row"><strong>Extra Ports:</strong> ${escapeHtml((host.extraports || []).map((item) => `${item.count || "?"} ${item.state || "?"}`).join(", ") || "-")}</div>
+            <div class="mini-row"><strong>Detailed Port Fingerprints:</strong></div>
+            <div class="pill-list">${portPills || '<span class="pill">none</span>'}</div>
+          </div>
+        `;
+      });
+
+      detectionBody.innerHTML = cards.join("");
     }
 
     function setStatus(message, isError = false) {
@@ -958,6 +1191,8 @@
           throw new Error(errorDetail(data));
         }
         renderRows(data);
+        renderMeta(data);
+        renderDetections(data);
         rawJson.textContent = JSON.stringify(data, null, 2);
         setStatus("Scan completed.");
       } catch (error) {
@@ -971,6 +1206,8 @@
       form.reset();
       rawJson.textContent = "{}";
       resultBody.innerHTML = `<tr><td colspan="5">No scan results yet.</td></tr>`;
+      scanMeta.innerHTML = `<div class="meta-item"><strong>Status</strong>Waiting for first scan.</div>`;
+      detectionBody.textContent = "No detection details yet.";
       setStatus("Ready.");
       refreshFlagUi();
     });
