@@ -1,7 +1,7 @@
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from backend.router import router
+from app.router import router
 
 app = FastAPI()
 app.include_router(router)
@@ -11,7 +11,7 @@ INDEX_FILE = BASE_DIR / "static" / "index.html"
 
 @app.get("/", include_in_schema=False)
 async def serve_frontend() -> FileResponse:
-    # Serve the local demo UI from the backend.
+    # Serve the local demo UI from the app.
     return FileResponse(INDEX_FILE)
 
 @app.get("/healthz", include_in_schema=False)

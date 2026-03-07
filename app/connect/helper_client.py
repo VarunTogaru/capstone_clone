@@ -5,7 +5,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from backend.scan.request import Request
+from app.scan.request import Request
 
 DEFAULT_HELPER_URL = "http://127.0.0.1:8765"
 HELPER_URL_ENV = "NMAP_HELPER_URL"

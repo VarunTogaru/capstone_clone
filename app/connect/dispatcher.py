@@ -1,6 +1,6 @@
-from backend.connect.helper_client import run_privileged_nmap_xml
-from backend.connect.runner import run_nmap_xml
-from backend.scan.request import Request
+from app.connect.helper_client import run_privileged_nmap_xml
+from app.connect.runner import run_nmap_xml
+from app.scan.request import Request
 
 
 async def run_scan_xml(req: Request) -> str:
