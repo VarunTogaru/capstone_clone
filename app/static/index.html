@@ -466,7 +466,7 @@
           <fieldset class="field">
             <legend>Beginner Flags (Top 5)</legend>
             <div id="beginner-flags" class="check-grid"></div>
-            <button type="button" id="toggle-more-flags" class="toggle-more">6) Others (All Flags)</button>
+            <button type="button" id="toggle-more-flags" class="toggle-more">Others (All Flags)</button>
             <div id="all-flags-panel" class="flag-library" hidden>
               <div id="all-flag-sections" class="flag-sections"></div>
             </div>
@@ -926,7 +926,7 @@
 
     toggleMoreFlagsBtn.addEventListener("click", () => {
       allFlagsPanel.hidden = !allFlagsPanel.hidden;
-      toggleMoreFlagsBtn.textContent = allFlagsPanel.hidden ? "6) Others (All Flags)" : "Hide Others";
+      toggleMoreFlagsBtn.textContent = allFlagsPanel.hidden ? "Others (All Flags)" : "Hide Others";
     });
 
     form.addEventListener("submit", async (event) => {
