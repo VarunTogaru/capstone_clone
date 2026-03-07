@@ -34,7 +34,15 @@ async def run_nmap_xml(req: Request) -> str:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    stdout, stderr = await proc.communicate()
+    try:
+        stdout, stderr = await asyncio.wait_for(
+            proc.communicate(),
+            timeout=req.timeout_seconds,
+        )
+    except asyncio.TimeoutError as exc:
+        proc.kill()
+        await proc.communicate()
+        raise RuntimeError("SCAN_TIMEOUT: scan exceeded timeout") from exc
 
     if proc.returncode != 0:
         raise RuntimeError(stderr.decode(errors="ignore") or "Nmap failed")
