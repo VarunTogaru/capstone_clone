@@ -3,25 +3,51 @@ import json
 import os
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import Any
 
 from app.scan.request import Request
 
 DEFAULT_HELPER_URL = "http://127.0.0.1:8765"
 HELPER_URL_ENV = "NMAP_HELPER_URL"
+TOKEN_ENV = "NMAP_HELPER_TOKEN"
+TOKEN_FILE_ENV = "NMAP_HELPER_TOKEN_FILE"
+DEFAULT_TOKEN_FILE = Path("/var/run/nmap-insight/helper.token")
 
 
 def _helper_url() -> str:
     return os.getenv(HELPER_URL_ENV, DEFAULT_HELPER_URL).rstrip("/")
 
 
+def _helper_token() -> str:
+    """Read the shared authentication token from env var or token file."""
+    token = os.getenv(TOKEN_ENV)
+    if token:
+        return token
+
+    token_file = Path(os.getenv(TOKEN_FILE_ENV, str(DEFAULT_TOKEN_FILE)))
+    if token_file.exists():
+        stored = token_file.read_text().strip()
+        if stored:
+            return stored
+
+    raise RuntimeError(
+        "HELPER_NOT_AVAILABLE: no authentication token found. "
+        f"Set {TOKEN_ENV} or ensure {token_file} exists."
+    )
+
+
 def _http_post_json(url: str, payload: dict[str, Any], timeout_seconds: int) -> dict[str, Any]:
+    token = _helper_token()
     body = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
         url=url,
         data=body,
         method="POST",
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}",
+        },
     )
     with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
         raw = response.read().decode("utf-8")
