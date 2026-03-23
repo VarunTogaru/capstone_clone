@@ -116,6 +116,42 @@ Target user-friendly packaging flow:
 
 See `docs/privileged-helper-contract.md` for implementation direction.
 
+## Packaging and Installation
+
+### Prerequisites for Building
+
+1.  **Python 3.10+** and a virtual environment.
+2.  **Inno Setup** (for creating the Windows installer): [Download Inno Setup](https://jrsoftware.org/isdl.php)
+
+### Building the Executable
+
+The project uses `PyInstaller` to bundle the FastAPI app into a single executable.
+
+1.  Install the build dependencies:
+    ```powershell
+    pip install -r app/requirements.txt
+    ```
+2.  Run PyInstaller using the provided `.spec` file:
+    ```powershell
+    pyinstaller main.spec
+    ```
+    This will generate a `dist/main.exe` file.
+
+### Creating the Installer
+
+The installer is built using Inno Setup to provide a standard Windows installation experience.
+
+1.  Open `installer.iss` in the **Inno Setup Compiler**.
+2.  Click **Build** -> **Compile** (or press `Ctrl+F9`).
+3.  The final installer `NMAP_Insight_Setup.exe` will be created in the `dist/` directory.
+
+### Installation
+
+1.  Locate `NMAP_Insight_Setup.exe` in the `dist/` folder.
+2.  Run the installer (requires **Administrator privileges** to install to `Program Files`).
+3.  Follow the setup wizard to complete the installation.
+4.  Launch **Nmap Insight** from the Desktop shortcut or Start Menu.
+
 ## Ownership and License
 
 This project is proprietary and owned by Caleb Tunks.

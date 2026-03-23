@@ -1,4 +1,8 @@
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from app.router import router
@@ -6,7 +10,11 @@ from app.router import router
 app = FastAPI()
 app.include_router(router)
 
-BASE_DIR = Path(__file__).resolve().parent
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    BASE_DIR = Path(sys._MEIPASS) / "app"  # For when running PyInstaller
+else:
+    BASE_DIR = Path(__file__).resolve().parent  # For running normally
+
 INDEX_FILE = BASE_DIR / "static" / "index.html"
 
 @app.get("/", include_in_schema=False)
@@ -17,3 +25,9 @@ async def serve_frontend() -> FileResponse:
 @app.get("/healthz", include_in_schema=False)
 async def healthz() -> dict:
     return {"status": "ok"}
+
+if __name__ == "__main__":
+    import uvicorn
+    import multiprocessing
+    multiprocessing.freeze_support()
+    uvicorn.run(app, host="127.0.0.1", port=8000)
