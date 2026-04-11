@@ -9,6 +9,7 @@ ALLOWED_FLAGS = {
     "-sT",
     "-sU",
     "-sV",
+    "-sC",
     "-A",
     "-O",
     "-Pn",

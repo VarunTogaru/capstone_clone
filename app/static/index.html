@@ -123,6 +123,9 @@
       cursor: pointer;
       font-size: 0.85rem;
       transition: background 0.15s, border-color 0.15s;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     .history-card:hover {
@@ -133,6 +136,36 @@
     .history-card.active {
       background: #e6f4ea;
       border-color: #aed5bb;
+    }
+
+    #btn-compare-selected:disabled {
+      opacity: 0.6;
+      cursor: not-allowed !important;
+    }
+
+    .history-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .history-card-header strong {
+      font-size: 0.95rem;
+      line-height: 1.3;
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
+
+    .history-card-checkbox {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      transform: scale(1.25);
+      cursor: pointer;
+      accent-color: var(--accent);
     }
 
     .history-meta {
@@ -581,6 +614,7 @@
       <nav class="top-nav">
         <button class="nav-tab active" id="tab-scanner" onclick="switchView('scanner')">Scanner</button>
         <button class="nav-tab" id="tab-history" onclick="switchView('history')">History</button>
+        <button class="nav-tab" id="tab-compare" onclick="switchView('compare')">Compare</button>
       </nav>
     </div>
 
@@ -724,12 +758,25 @@
     </section>
 
     <section id="view-history" class="panel" hidden>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="margin: 0;">Scan History</h2>
+        <button id="btn-compare-selected" disabled
+          style="background: var(--accent); color: white; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem;"
+          onclick="triggerCompare()">Select 2 scans to compare</button>
+      </div>
+      <div style="margin-bottom: 20px;">
         <input type="text" id="filter-history" placeholder="Search targets or flags..."
-          style="max-width: 250px; padding: 6px 10px; font-size: 0.85rem; border: 1px solid #d9e0d8; border-radius: 4px;">
+          style="width: 100%; max-width: 300px; padding: 8px 10px; font-size: 0.85rem; border: 1px solid #d9e0d8; border-radius: 4px;">
       </div>
       <div id="history-list" class="history-grid-view">Loading...</div>
+    </section>
+
+    <section id="view-compare" class="panel" hidden>
+      <h2 style="margin-bottom: 20px;">Scan Comparison Diff</h2>
+      <div id="compare-summary"
+        style="margin-bottom: 16px; background: #fbfefb; padding: 12px; border: 1px solid #d9e5da; border-radius: 8px;">
+        Select exactly two scans from the History tab and click "Compare 2 Scans".</div>
+      <div id="compare-body"></div>
     </section>
   </main>
 
@@ -1452,15 +1499,275 @@
       });
     });
 
+    let selectedCompareScans = new Set();
+
+    function updateCompareButton() {
+      const btn = document.getElementById("btn-compare-selected");
+      if (selectedCompareScans.size === 0) {
+        btn.textContent = "Select 2 scans to compare";
+        btn.disabled = true;
+      } else if (selectedCompareScans.size === 1) {
+        btn.textContent = "Select 1 more scan";
+        btn.disabled = true;
+      } else {
+        btn.textContent = "Compare 2 Scans";
+        btn.disabled = false;
+      }
+    }
+
+    function toggleCompare(event, scanId) {
+      event.stopPropagation();
+      if (selectedCompareScans.has(scanId)) {
+        selectedCompareScans.delete(scanId);
+      } else {
+        if (selectedCompareScans.size >= 2) {
+          alert("You can only compare exactly 2 scans at a time.");
+          event.target.checked = false;
+          return;
+        }
+        selectedCompareScans.add(scanId);
+      }
+      updateCompareButton();
+    }
+
     async function fetchHistory() {
       try {
         const response = await fetch("/scans");
         if (!response.ok) return;
         allHistoryScans = await response.json();
+        selectedCompareScans.clear();
+        updateCompareButton();
         renderHistory();
       } catch (e) {
         console.error("Failed to load history:", e);
       }
+    }
+
+    async function triggerCompare() {
+      const ids = Array.from(selectedCompareScans);
+      if (ids.length !== 2) return;
+
+      setStatus("Fetching scans for comparison...");
+      try {
+        const [scan1, scan2] = await Promise.all([
+          fetch(`/scans/${ids[0]}`).then(r => r.json()),
+          fetch(`/scans/${ids[1]}`).then(r => r.json())
+        ]);
+
+        const meta1 = allHistoryScans.find(s => s.id === ids[0]);
+        const meta2 = allHistoryScans.find(s => s.id === ids[1]);
+
+        scan1.timestamp = meta1?.timestamp;
+        scan2.timestamp = meta2?.timestamp;
+
+        const oldScan = new Date(scan1.timestamp) < new Date(scan2.timestamp) ? scan1 : scan2;
+        const newScan = oldScan === scan1 ? scan2 : scan1;
+
+        const summaryHtml = `
+          <strong>Compare Mode</strong><br>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.9em; margin-top: 12px;">
+            <div style="background: white; padding: 8px; border-left: 3px solid #888;">
+              <strong>Older Scan:</strong> ${escapeHtml(oldScan.target)} <span style="color: #666;">(${new Date(oldScan.timestamp).toLocaleString()})</span>
+            </div>
+            <div style="background: white; padding: 8px; border-left: 3px solid var(--accent);">
+              <strong>Newer Scan:</strong> ${escapeHtml(newScan.target)} <span style="color: #666;">(${new Date(newScan.timestamp).toLocaleString()})</span>
+            </div>
+          </div>
+        `;
+        document.getElementById("compare-summary").innerHTML = summaryHtml;
+
+        const diffHtml = computeDiff(oldScan, newScan);
+        document.getElementById("compare-body").innerHTML = diffHtml;
+
+        switchView('compare');
+        setStatus("Comparison loaded.");
+      } catch (error) {
+        console.error(error);
+        alert("Failed to fetch one or both scans.");
+        setStatus("Error loading comparison.", true);
+      }
+    }
+
+    function renderDiffRow(type, message, val1, val2) {
+      if (type === '+') {
+        return `<div style="display: flex; gap: 12px; margin-bottom: 4px; border-left: 3px solid #278544; background: #eaf5ec; padding: 6px 12px; border-radius: 4px;">
+                  <span style="color: #176b32; font-weight: bold; width: 20px;">+</span>
+                  <span style="color: #114d24; flex: 1;">${message}</span>
+                </div>`;
+      } else if (type === '-') {
+        return `<div style="display: flex; gap: 12px; margin-bottom: 4px; border-left: 3px solid #d13030; background: #fcebeb; padding: 6px 12px; border-radius: 4px;">
+                  <span style="color: #b32626; font-weight: bold; width: 20px;">-</span>
+                  <span style="color: #8c1e1e; flex: 1;">${message}</span>
+                </div>`;
+      } else if (type === '~') {
+        const v1Html = (val1.includes('\\n') || val1.length > 50) ? `<pre style="margin: 0; white-space: pre-wrap; font-family: monospace; font-size: 0.85em;">${val1}</pre>` : val1;
+        const v2Html = (val2.includes('\\n') || val2.length > 50) ? `<pre style="margin: 0; white-space: pre-wrap; font-family: monospace; font-size: 0.85em;">${val2}</pre>` : val2;
+        return `<div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; border-left: 3px solid #b58900; background: #fdf6e3; padding: 8px 12px; border-radius: 4px;">
+                  <div style="color: #926f00; font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">~ ${message}</div>
+                  <div style="display: flex; gap: 12px; font-size: 0.85rem;">
+                    <div style="flex: 1; min-width: 0; background: #fcebeb; color: #b32626; padding: 6px 10px; border-radius: 4px; border-left: 2px solid #d13030; overflow-wrap: break-word;"><strong>[-] Old</strong><div style="margin-top:4px;">${v1Html}</div></div>
+                    <div style="flex: 1; min-width: 0; background: #eaf5ec; color: #176b32; padding: 6px 10px; border-radius: 4px; border-left: 2px solid #278544; overflow-wrap: break-word;"><strong>[+] New</strong><div style="margin-top:4px;">${v2Html}</div></div>
+                  </div>
+                </div>`;
+      }
+      return '';
+    }
+
+    function formatOS(host) {
+      if (!host || !host.os || !host.os.matches || !host.os.matches.length) return null;
+      return host.os.matches[0].name;
+    }
+
+    function formatHostnames(host) {
+      if (!host || !host.hostnames || !host.hostnames.length) return null;
+      return host.hostnames.map(hn => hn.name).sort().join(", ");
+    }
+
+    function buildScriptMap(scriptsArray) {
+      const map = {};
+      if (!scriptsArray) return map;
+      for (const s of scriptsArray) {
+        if (s.id) map[s.id] = s.output || "(No output)";
+      }
+      return map;
+    }
+
+    function diffScripts(oldScripts, newScripts, contextName, diffLines) {
+      const oldMap = buildScriptMap(oldScripts);
+      const newMap = buildScriptMap(newScripts);
+      const allKeys = new Set([...Object.keys(oldMap), ...Object.keys(newMap)]);
+      for (const k of allKeys) {
+        const o = oldMap[k];
+        const n = newMap[k];
+        if (!o && n) {
+          diffLines.push(renderDiffRow('+', `[${contextName}] Script <strong>${escapeHtml(k)}</strong> output detected:`, '', escapeHtml(n)));
+        } else if (o && !n) {
+          diffLines.push(renderDiffRow('-', `[${contextName}] Script <strong>${escapeHtml(k)}</strong> output removed`, escapeHtml(o), ''));
+        } else if (o !== n) {
+          diffLines.push(renderDiffRow('~', `[${contextName}] Script <strong>${escapeHtml(k)}</strong> output modified`, escapeHtml(o), escapeHtml(n)));
+        }
+      }
+    }
+
+    function computeDiff(oldScan, newScan) {
+      const oldHosts = buildHostMap(oldScan.hosts || []);
+      const newHosts = buildHostMap(newScan.hosts || []);
+
+      const allIps = new Set([...Object.keys(oldHosts), ...Object.keys(newHosts)]);
+      if (allIps.size === 0) return `<div style="padding: 16px;">No hosts found in either scan.</div>`;
+
+      let html = `<div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">`;
+
+      if (oldScan.target.toLowerCase() !== newScan.target.toLowerCase()) {
+        html += `<div style="background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; border-left: 4px solid #ffeeba;">
+            <strong>Heads up:</strong> You are comparing scans for two different targets (<code>${escapeHtml(oldScan.target)}</code> vs <code>${escapeHtml(newScan.target)}</code>). Because these are two separate endpoints, the comparison engine will natively show the old servers as disappearing (DOWN) and the new ones as appearing newly (UP).
+         </div>`;
+      }
+
+      for (const ip of allIps) {
+        const oh = oldHosts[ip];
+        const nh = newHosts[ip];
+        const diffLines = [];
+
+        if (!oh && nh) {
+          diffLines.push(renderDiffRow('+', `Host answered and is <strong>UP</strong>`, '', ''));
+        } else if (oh && !nh) {
+          diffLines.push(renderDiffRow('-', `Host ceased answering and is <strong>DOWN</strong>`, '', ''));
+        }
+
+        if (oh || nh) {
+          const oldHn = formatHostnames(oh);
+          const newHn = formatHostnames(nh);
+          if (!oldHn && newHn) diffLines.push(renderDiffRow('+', `Hostnames resolved: <strong>${escapeHtml(newHn)}</strong>`, '', ''));
+          else if (oldHn && !newHn) diffLines.push(renderDiffRow('-', `Hostnames disappeared (was: <strong>${escapeHtml(oldHn)}</strong>)`, '', ''));
+          else if (oldHn && newHn && oldHn !== newHn) diffLines.push(renderDiffRow('~', `Hostnames changed`, escapeHtml(oldHn), escapeHtml(newHn)));
+
+          const oldOs = formatOS(oh);
+          const newOs = formatOS(nh);
+          if (!oldOs && newOs) diffLines.push(renderDiffRow('+', `OS detected: <strong>${escapeHtml(newOs)}</strong>`, '', ''));
+          else if (oldOs && !newOs) diffLines.push(renderDiffRow('-', `OS detection lost (was: <strong>${escapeHtml(oldOs)}</strong>)`, '', ''));
+          else if (oldOs && newOs && oldOs !== newOs) diffLines.push(renderDiffRow('~', `OS match changed`, escapeHtml(oldOs), escapeHtml(newOs)));
+
+          diffScripts(oh?.hostscripts, nh?.hostscripts, "Host", diffLines);
+
+          const oldPortsMap = buildPortMap(oh ? oh.ports : []);
+          const newPortsMap = buildPortMap(nh ? nh.ports : []);
+          const allPortKeys = new Set([...Object.keys(oldPortsMap), ...Object.keys(newPortsMap)]);
+          const sortedKeys = Array.from(allPortKeys).sort((a, b) => parseInt(a.split("/")[0]) - parseInt(b.split("/")[0]));
+
+          for (const pk of sortedKeys) {
+            const op = oldPortsMap[pk];
+            const np = newPortsMap[pk];
+
+            if (!op && np) {
+              if (np.state === 'open') {
+                diffLines.push(renderDiffRow('+', `Port <strong>${pk}</strong> opened (${escapeHtml(np.service_detail?.name || np.service || "unknown")})`, '', ''));
+              } else {
+                diffLines.push(renderDiffRow('+', `Port <strong>${pk}</strong> discovered (${np.state})`, '', ''));
+              }
+              diffScripts(null, np.scripts, `Port ${pk}`, diffLines);
+            } else if (op && !np) {
+              if (op.state === 'open') {
+                diffLines.push(renderDiffRow('-', `Port <strong>${pk}</strong> closed (was open)`, '', ''));
+              } else {
+                diffLines.push(renderDiffRow('-', `Port <strong>${pk}</strong> disappeared (was ${op.state})`, '', ''));
+              }
+            } else {
+              if (op.state !== np.state) {
+                diffLines.push(renderDiffRow('~', `Port <strong>${pk}</strong> state changed`, op.state, np.state));
+              } else if (op.service_detail?.name !== np.service_detail?.name || op.service_detail?.version !== np.service_detail?.version) {
+                const oldSvc = [op.service_detail?.name || op.service, op.service_detail?.version].filter(Boolean).join(" ") || "unknown";
+                const newSvc = [np.service_detail?.name || np.service, np.service_detail?.version].filter(Boolean).join(" ") || "unknown";
+                if (oldSvc !== newSvc) {
+                  diffLines.push(renderDiffRow('~', `Port <strong>${pk}</strong> service updated`, escapeHtml(oldSvc), escapeHtml(newSvc)));
+                }
+              }
+              diffScripts(op.scripts, np.scripts, `Port ${pk}`, diffLines);
+            }
+          }
+        }
+
+        html += renderHostDiffPanel(ip, diffLines);
+      }
+
+      html += `</div>`;
+      return html;
+    }
+
+    function buildHostMap(hostsArray) {
+      const map = {};
+      for (const h of hostsArray) {
+        if (h.address) map[h.address] = h;
+      }
+      return map;
+    }
+
+    function buildPortMap(portsArray) {
+      const map = {};
+      if (!portsArray) return map;
+      for (const p of portsArray) {
+        if (p.port && p.proto) {
+          map[`${p.port}/${p.proto}`] = p;
+        }
+      }
+      return map;
+    }
+
+    function renderHostDiffPanel(ip, diffLines) {
+      const inner = diffLines.length
+        ? diffLines.join("")
+        : `<div style="color: #666; padding: 4px 8px; font-style: italic;">No visible state, service, hostnames, or fingerprint changes detected.</div>`;
+
+      return `
+        <div style="border: 1px solid #d9e5da; border-radius: 8px; padding: 16px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid #edf1eb; padding-bottom: 8px;">
+            ${escapeHtml(ip)}
+          </div>
+          <div style="font-family: inherit; font-size: 0.95em; line-height: 1.6; display: flex; flex-direction: column; gap: 4px;">
+            ${inner}
+          </div>
+        </div>
+      `;
     }
 
     function renderHistory() {
@@ -1488,8 +1795,16 @@
 
         return `
         <div class="history-card" onclick="loadScan(${scan.id})">
-          <div style="font-size: 0.95rem; margin-bottom: 4px;"><strong>${escapeHtml(scan.target)}</strong></div>
-          <div class="pill-list" style="margin-bottom: 8px;">
+          <div class="history-card-header">
+            <strong>${escapeHtml(scan.target)}</strong>
+            <input
+              type="checkbox"
+              class="history-card-checkbox"
+              onclick="toggleCompare(event, ${scan.id})"
+              ${selectedCompareScans.has(scan.id) ? 'checked' : ''}
+            >
+          </div>
+          <div class="pill-list" style="margin-bottom: 12px;">
             ${flagsHtml}
           </div>
           <div class="history-meta" style="border-top: 1px solid #edf1eb; padding-top: 6px; margin-top: auto;">
@@ -1575,9 +1890,11 @@
     function switchView(viewId) {
       document.getElementById('view-scanner').hidden = (viewId !== 'scanner');
       document.getElementById('view-history').hidden = (viewId !== 'history');
+      document.getElementById('view-compare').hidden = (viewId !== 'compare');
 
       document.getElementById('tab-scanner').classList.toggle('active', viewId === 'scanner');
       document.getElementById('tab-history').classList.toggle('active', viewId === 'history');
+      document.getElementById('tab-compare').classList.toggle('active', viewId === 'compare');
     }
 
     renderFlagLibrary();
