@@ -101,6 +101,15 @@ def _request_payload(req: Request) -> dict[str, Any]:
     }
 
 
+async def cancel_privileged_scan(request_id: str) -> bool:
+    try:
+        response = await _post_json("/cancel", {"request_id": request_id}, timeout_seconds=5)
+        return response.get("status") == "canceled"
+    except Exception as exc:
+        logger.warning("Failed to cancel privileged scan %s: %s", request_id, exc)
+        return False
+
+
 async def run_privileged_nmap_xml(req: Request) -> str:
     logger.info("Requesting privileged scan: target=%s", req.target)
     payload = _request_payload(req)

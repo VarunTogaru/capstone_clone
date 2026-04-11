@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,6 +22,10 @@
       box-sizing: border-box;
     }
 
+    [hidden] {
+      display: none !important;
+    }
+
     body {
       margin: 0;
       font-family: "Avenir Next", "Trebuchet MS", "Gill Sans", sans-serif;
@@ -35,18 +40,61 @@
     }
 
     .shell {
-      max-width: 1020px;
+      max-width: 1200px;
       margin: 0 auto;
       animation: fade-up 260ms ease-out;
     }
 
     @keyframes fade-up {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 10px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-tab:hover {
+      background: #e6eee8;
+      color: #2f4536;
+    }
+
+    .nav-tab.active {
+      background: var(--accent);
+      color: #fff;
     }
 
     .header {
-      margin-bottom: 18px;
+      margin-bottom: 0px;
     }
 
     .title {
@@ -57,8 +105,42 @@
 
     .grid {
       display: grid;
-      grid-template-columns: minmax(300px, 330px) minmax(0, 1fr);
+      grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .history-grid-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 14px;
+    }
+
+    .history-card {
+      border: 1px solid #d9e5da;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fbfefb;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .history-card:hover {
+      background: #eef7f0;
+      border-color: #cfe1d1;
+    }
+
+    .history-card.active {
+      background: #e6f4ea;
+      border-color: #aed5bb;
+    }
+
+    .history-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--muted);
     }
 
     .panel {
@@ -370,6 +452,7 @@
       font-size: 0.82rem;
       letter-spacing: 0.02em;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .raw {
@@ -488,13 +571,21 @@
     }
   </style>
 </head>
+
 <body>
   <main class="shell">
-    <header class="header">
-      <h1 class="title">Nmap Insight</h1>
-    </header>
+    <div class="header-content">
+      <header class="header">
+        <h1 class="title">Nmap Insight</h1>
+      </header>
+      <nav class="top-nav">
+        <button class="nav-tab active" id="tab-scanner" onclick="switchView('scanner')">Scanner</button>
+        <button class="nav-tab" id="tab-history" onclick="switchView('history')">History</button>
+      </nav>
+    </div>
 
-    <section class="grid">
+    <section id="view-scanner" class="grid">
+
       <article class="panel">
         <h2>Run Scan</h2>
         <form id="scan-form">
@@ -513,7 +604,8 @@
                   <span>Connect scan without root.</span>
                 </div>
               </label>
-              <label class="option-card" title="SYN scan (-sS). Faster stealthier scan, often needs elevated privileges.">
+              <label class="option-card"
+                title="SYN scan (-sS). Faster stealthier scan, often needs elevated privileges.">
                 <input type="radio" name="scan_type" value="syn">
                 <div>
                   <strong>syn</strong>
@@ -544,9 +636,15 @@
             </label>
           </div>
 
-          <div class="field">
-            <label for="ports">Ports (optional)</label>
-            <input id="ports" name="ports" placeholder="22,80,443 or 1-1024">
+          <div class="field" style="display: flex; gap: 12px; align-items: flex-end;">
+            <div style="flex: 2;">
+              <label for="ports">Ports (optional)</label>
+              <input id="ports" name="ports" placeholder="22,80,443 or 1-1024">
+            </div>
+            <div style="flex: 1;">
+              <label for="timeout_seconds">Timeout (s)</label>
+              <input id="timeout_seconds" name="timeout_seconds" type="number" min="10" max="3600" value="180">
+            </div>
           </div>
 
           <fieldset class="field">
@@ -572,8 +670,10 @@
             </div>
           </div>
 
-          <div class="actions">
+          <div class="actions" style="display: flex; gap: 8px;">
             <button class="run" type="submit" id="run-btn">Run Scan</button>
+            <button class="stop" type="button" id="stop-btn"
+              style="background: #e65c5c; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; display: none;">Stop</button>
             <button class="clear" type="button" id="clear-btn">Clear</button>
           </div>
         </form>
@@ -586,19 +686,25 @@
         <h2>Results</h2>
         <p class="section-title">Parsed host/port output</p>
         <div class="table-wrap">
+          <div style="padding: 10px; border-bottom: 1px solid #edf1eb; background: #fbfefb;">
+            <input type="text" id="filter-ports" placeholder="Filter by port (e.g. 80, 443)..."
+              style="max-width: 300px; padding: 6px 10px; font-size: 0.85rem;">
+          </div>
           <table>
             <thead>
               <tr>
-                <th>Address</th>
-                <th>Port</th>
-                <th>Proto</th>
-                <th>State</th>
-                <th>Service</th>
+                <th data-sort="ip" style="cursor: pointer;">IP &#8597;</th>
+                <th data-sort="hostname" style="cursor: pointer;">Hostname &#8597;</th>
+                <th data-sort="os" style="cursor: pointer;">OS &#8597;</th>
+                <th data-sort="port" style="cursor: pointer;">Port &#8597;</th>
+                <th data-sort="proto" style="cursor: pointer;">Protocol &#8597;</th>
+                <th data-sort="state" style="cursor: pointer;">State &#8597;</th>
+                <th data-sort="service" style="cursor: pointer;">Service &#8597;</th>
               </tr>
             </thead>
             <tbody id="result-body">
               <tr>
-                <td colspan="5">No scan results yet.</td>
+                <td colspan="7">No scan results yet.</td>
               </tr>
             </tbody>
           </table>
@@ -616,6 +722,15 @@
         <pre id="raw-json" class="raw">{}</pre>
       </article>
     </section>
+
+    <section id="view-history" class="panel" hidden>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Scan History</h2>
+        <input type="text" id="filter-history" placeholder="Search targets or flags..."
+          style="max-width: 250px; padding: 6px 10px; font-size: 0.85rem; border: 1px solid #d9e0d8; border-radius: 4px;">
+      </div>
+      <div id="history-list" class="history-grid-view">Loading...</div>
+    </section>
   </main>
 
   <script>
@@ -627,12 +742,20 @@
     const scanMeta = document.getElementById("scan-meta");
     const detectionBody = document.getElementById("detection-body");
     const runBtn = document.getElementById("run-btn");
+    const stopBtn = document.getElementById("stop-btn");
     const clearBtn = document.getElementById("clear-btn");
     const beginnerFlagsNode = document.getElementById("beginner-flags");
     const allFlagsPanel = document.getElementById("all-flags-panel");
     const allFlagSectionsNode = document.getElementById("all-flag-sections");
     const toggleMoreFlagsBtn = document.getElementById("toggle-more-flags");
     const selectedFlagDetailsNode = document.getElementById("selected-flag-details");
+    const filterPortsInput = document.getElementById("filter-ports");
+
+    let currentHostsData = [];
+    let currentSort = { column: null, asc: true };
+    let activeRequestId = null;
+    let activeIsPrivileged = false;
+    let allHistoryScans = [];
 
     const BEGINNER_FLAGS = ["-sV", "-Pn", "-n", "-T4", "--open"];
 
@@ -821,7 +944,6 @@
     }
 
     function parseExtraArgs(input) {
-      // Split custom args while preserving quoted groups.
       const tokens = input.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
       return tokens.map((item) => item.replace(/^"(.*)"$/, "$1")).filter(Boolean);
     }
@@ -926,7 +1048,12 @@
       const selections = collectFlagSelections();
       const flagTokens = selections.flatMap((selection) => selectionToTokens(selection, usePlaceholder));
       const customArgs = parseExtraArgs(form.extra_args.value.trim());
-      const extraArgs = [...flagTokens, ...customArgs];
+
+      const scanType = selectedScanType();
+      const defaultFlagMap = { tcp: "-sT", syn: "-sS", version: "-sV" };
+      const defaultFlag = defaultFlagMap[scanType];
+
+      const extraArgs = [...flagTokens, ...customArgs].filter(arg => arg !== defaultFlag);
       return {
         selections,
         missing: selections.filter((selection) => selection.missing),
@@ -935,7 +1062,7 @@
           scan_type: selectedScanType(),
           ports: form.ports.value.trim() || null,
           use_privileged: Boolean(form.use_privileged.checked),
-          timeout_seconds: 180,
+          timeout_seconds: parseInt(form.timeout_seconds?.value || "180", 10),
           extra_args: extraArgs,
         },
       };
@@ -943,11 +1070,16 @@
 
     function buildCommandPreview(payload) {
       const parts = ["nmap"];
-      if (payload.scan_type === "tcp") parts.push("-sT");
-      if (payload.scan_type === "syn") parts.push("-sS");
-      if (payload.scan_type === "version") parts.push("-sV");
+      const defaultFlagMap = { tcp: "-sT", syn: "-sS", version: "-sV" };
+      const defaultFlag = defaultFlagMap[payload.scan_type];
+
+      if (defaultFlag) parts.push(defaultFlag);
       if (payload.ports) parts.push("-p", payload.ports);
-      if (payload.extra_args?.length) parts.push(...payload.extra_args);
+      if (payload.extra_args?.length) {
+        for (let arg of payload.extra_args) {
+          if (arg !== defaultFlag) parts.push(arg);
+        }
+      }
       parts.push("-oX", "-", payload.target || "<target>");
       return parts.join(" ");
     }
@@ -987,23 +1119,83 @@
       renderSelectedFlagDetails(previewState.selections);
     }
 
-    function renderRows(data) {
-      const rows = [];
-      for (const host of data.hosts || []) {
+    function parseOS(host) {
+      return host.os?.matches?.[0]?.name || "Unknown";
+    }
+
+    function parseHostname(host) {
+      return host.hostnames?.[0]?.name || "Unknown";
+    }
+
+    function updateTable() {
+      const filterText = (filterPortsInput.value || "").toLowerCase();
+
+      let flatData = [];
+      for (const host of currentHostsData) {
+        const ip = host.address || "Unknown";
+        const hostname = parseHostname(host);
+        const os = parseOS(host);
         const ports = host.ports?.length ? host.ports : [{ port: "-", proto: "-", state: "-", service: "-" }];
-        for (const port of ports) {
-          rows.push(`
-            <tr>
-              <td>${escapeHtml(host.address || "-")}</td>
-              <td>${escapeHtml(port.port || "-")}</td>
-              <td>${escapeHtml(port.proto || "-")}</td>
-              <td>${escapeHtml(port.state || "-")}</td>
-              <td>${escapeHtml(port.service || "-")}</td>
-            </tr>
-          `);
+        for (const p of ports) {
+          flatData.push({
+            ip,
+            hostname,
+            os,
+            port: p.port || "-",
+            proto: p.proto || "-",
+            state: p.state || "-",
+            service: p.service || "-"
+          });
         }
       }
-      resultBody.innerHTML = rows.length ? rows.join("") : `<tr><td colspan="5">No hosts returned.</td></tr>`;
+
+      let filtered = flatData.filter(row => {
+        return row.port.toLowerCase().includes(filterText) || row.service.toLowerCase().includes(filterText);
+      });
+
+      if (currentSort.column) {
+        filtered.sort((a, b) => {
+          let valA = "", valB = "";
+          if (currentSort.column === "ip") {
+            valA = a.ip;
+            valB = b.ip;
+            const numA = valA.split('.').map(n => parseInt(n, 10)).reduce((acc, val) => (acc << 8) + val, 0);
+            const numB = valB.split('.').map(n => parseInt(n, 10)).reduce((acc, val) => (acc << 8) + val, 0);
+            return currentSort.asc ? numA - numB : numB - numA;
+          } else if (currentSort.column === "port") {
+            const numA = parseInt(a.port, 10) || 0;
+            const numB = parseInt(b.port, 10) || 0;
+            return currentSort.asc ? numA - numB : numB - numA;
+          } else {
+            valA = String(a[currentSort.column]).toLowerCase();
+            valB = String(b[currentSort.column]).toLowerCase();
+          }
+          if (valA < valB) return currentSort.asc ? -1 : 1;
+          if (valA > valB) return currentSort.asc ? 1 : -1;
+          return 0;
+        });
+      }
+
+      const rows = filtered.map(row => {
+        return `
+          <tr>
+            <td>${escapeHtml(row.ip)}</td>
+            <td>${escapeHtml(row.hostname)}</td>
+            <td>${escapeHtml(row.os)}</td>
+            <td>${escapeHtml(row.port)}</td>
+            <td>${escapeHtml(row.proto)}</td>
+            <td>${escapeHtml(row.state)}</td>
+            <td>${escapeHtml(row.service)}</td>
+          </tr>
+        `;
+      });
+
+      resultBody.innerHTML = rows.length ? rows.join("") : `<tr><td colspan="7">No matching results.</td></tr>`;
+    }
+
+    function renderRows(data) {
+      currentHostsData = data.hosts || [];
+      updateTable();
     }
 
     function textList(values) {
@@ -1175,12 +1367,17 @@
 
       setStatus("Running scan...");
       runBtn.disabled = true;
+      stopBtn.style.display = "inline-block";
+      stopBtn.disabled = false;
 
       try {
         const payload = {
           ...state.payload,
           request_id: `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
         };
+        activeRequestId = payload.request_id;
+        activeIsPrivileged = payload.use_privileged;
+
         const response = await fetch("/scan", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1195,19 +1392,44 @@
         renderDetections(data);
         rawJson.textContent = JSON.stringify(data, null, 2);
         setStatus("Scan completed.");
+        fetchHistory();
       } catch (error) {
-        setStatus(String(error.message || error), true);
+        if (error.message.includes("Scan was canceled") || error.message.includes("SCAN_TIMEOUT") || error.message.includes("timed out")) {
+          setStatus(error.message.includes("TIMEOUT") ? "Scan timed out." : "Scan was stopped.", true);
+        } else {
+          setStatus(String(error.message || error), true);
+        }
       } finally {
         runBtn.disabled = false;
+        stopBtn.style.display = "none";
+        activeRequestId = null;
+      }
+    });
+
+    stopBtn.addEventListener("click", async () => {
+      if (!activeRequestId) return;
+      stopBtn.disabled = true;
+      setStatus("Stopping scan...", true);
+      try {
+        await fetch("/scan/cancel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ request_id: activeRequestId, use_privileged: activeIsPrivileged })
+        });
+      } catch (err) {
+        console.error("Cancel failed:", err);
       }
     });
 
     clearBtn.addEventListener("click", () => {
       form.reset();
       rawJson.textContent = "{}";
-      resultBody.innerHTML = `<tr><td colspan="5">No scan results yet.</td></tr>`;
+      currentHostsData = [];
+      updateTable();
+      resultBody.innerHTML = `<tr><td colspan="7">No scan results yet.</td></tr>`;
       scanMeta.innerHTML = `<div class="meta-item"><strong>Status</strong>Waiting for first scan.</div>`;
       detectionBody.textContent = "No detection details yet.";
+      if (filterPortsInput) filterPortsInput.value = "";
       setStatus("Ready.");
       refreshFlagUi();
     });
@@ -1215,8 +1437,153 @@
     form.addEventListener("input", refreshFlagUi);
     form.addEventListener("change", refreshFlagUi);
 
+    filterPortsInput?.addEventListener("input", updateTable);
+
+    document.querySelectorAll("th[data-sort]").forEach(th => {
+      th.addEventListener("click", () => {
+        const col = th.dataset.sort;
+        if (currentSort.column === col) {
+          currentSort.asc = !currentSort.asc;
+        } else {
+          currentSort.column = col;
+          currentSort.asc = true;
+        }
+        updateTable();
+      });
+    });
+
+    async function fetchHistory() {
+      try {
+        const response = await fetch("/scans");
+        if (!response.ok) return;
+        allHistoryScans = await response.json();
+        renderHistory();
+      } catch (e) {
+        console.error("Failed to load history:", e);
+      }
+    }
+
+    function renderHistory() {
+      const listDiv = document.getElementById("history-list");
+      const filterInput = document.getElementById("filter-history");
+      const filterStr = (filterInput?.value || "").toLowerCase().trim();
+
+      const filteredScans = allHistoryScans.filter(scan => {
+        if (!filterStr) return true;
+        const searchSpace = `${scan.target} ${scan.command} ${scan.scan_type}`.toLowerCase();
+        return searchSpace.includes(filterStr);
+      });
+
+      if (!filteredScans.length) {
+        listDiv.innerHTML = "<div>No matching scans found.</div>";
+        return;
+      }
+
+      listDiv.innerHTML = filteredScans.map(scan => {
+        const skipTokens = new Set(["nmap", "-oX", "-", scan.target]);
+        const cmdArgs = (scan.command || "").split(" ").filter(c => !skipTokens.has(c) && c.trim() !== "");
+        const flagsHtml = cmdArgs.length
+          ? cmdArgs.map(c => `<span class="pill" style="font-family: monospace;">${escapeHtml(c)}</span>`).join("")
+          : `<span class="pill" style="opacity: 0.6">No specific flags</span>`;
+
+        return `
+        <div class="history-card" onclick="loadScan(${scan.id})">
+          <div style="font-size: 0.95rem; margin-bottom: 4px;"><strong>${escapeHtml(scan.target)}</strong></div>
+          <div class="pill-list" style="margin-bottom: 8px;">
+            ${flagsHtml}
+          </div>
+          <div class="history-meta" style="border-top: 1px solid #edf1eb; padding-top: 6px; margin-top: auto;">
+            <span><strong style="color: #6a8269;">Type:</strong> ${escapeHtml(scan.scan_type)}</span>
+            <span>${new Date(scan.timestamp).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
+          </div>
+        </div>
+      `}).join("");
+    }
+
+    document.getElementById("filter-history")?.addEventListener("input", renderHistory);
+
+    async function loadScan(scanId) {
+      document.querySelectorAll(".history-card").forEach(el => el.classList.remove("active"));
+      setStatus("Loading past scan...");
+      runBtn.disabled = true;
+      try {
+        const response = await fetch(`/scans/${scanId}`);
+        if (!response.ok) throw new Error("Failed to load scan");
+        const data = await response.json();
+
+        if (data.target) form.target.value = data.target;
+        if (data.scan_type) {
+          const typeRadio = form.querySelector(`input[name="scan_type"][value="${data.scan_type}"]`);
+          if (typeRadio) typeRadio.checked = true;
+        }
+
+        form.ports.value = "";
+        form.extra_args.value = "";
+        form.use_privileged.checked = false;
+        form.querySelectorAll('input[name="arg_flags"]').forEach(cb => cb.checked = false);
+
+        if (data.command) {
+          const skipTokens = new Set(["nmap", "-oX", "-", data.target, "-sT", "-sS", "-sV"]);
+          const tokens = data.command.split(" ").filter(t => t.trim() !== "");
+          const customArgs = [];
+
+          for (let i = 0; i < tokens.length; i++) {
+            let t = tokens[i];
+            if (skipTokens.has(t)) continue;
+
+            if (t === "-p") {
+              if (i + 1 < tokens.length) form.ports.value = tokens[++i];
+              continue;
+            }
+
+            if (FLAG_INDEX.has(t)) {
+              const item = FLAG_INDEX.get(t);
+              const cb = form.querySelector(`input[name="arg_flags"][value="${t}"]`);
+              if (cb) cb.checked = true;
+              if (item.requiresValue && i + 1 < tokens.length) {
+                const vInput = valueInputs.get(t);
+                if (vInput) vInput.value = tokens[++i];
+              }
+            } else {
+              customArgs.push(t);
+            }
+          }
+          if (customArgs.length > 0) form.extra_args.value = customArgs.join(" ");
+        }
+
+        refreshFlagUi();
+
+        renderRows(data);
+        renderMeta(data);
+        renderDetections(data);
+
+        const rawOutput = { ...data };
+        delete rawOutput.target;
+        delete rawOutput.scan_type;
+        delete rawOutput.command;
+        rawJson.textContent = JSON.stringify(rawOutput, null, 2);
+
+        setStatus("Loaded past scan.");
+        switchView('scanner');
+      } catch (error) {
+        setStatus(String(error.message || error), true);
+      } finally {
+        runBtn.disabled = false;
+      }
+    }
+
+    function switchView(viewId) {
+      document.getElementById('view-scanner').hidden = (viewId !== 'scanner');
+      document.getElementById('view-history').hidden = (viewId !== 'history');
+
+      document.getElementById('tab-scanner').classList.toggle('active', viewId === 'scanner');
+      document.getElementById('tab-history').classList.toggle('active', viewId === 'history');
+    }
+
     renderFlagLibrary();
     refreshFlagUi();
+    fetchHistory();
   </script>
 </body>
+
 </html>
