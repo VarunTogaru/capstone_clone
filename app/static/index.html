@@ -603,6 +603,307 @@
       overflow-wrap: anywhere;
     }
 
+    [data-theme="dark"] {
+      --bg: #0b110e;
+      --card: rgba(17, 28, 23, 0.55);
+      --ink: #e2f0e9;
+      --muted: #8ca398;
+      --accent: #11a56e;
+      --accent-soft: rgba(17, 165, 110, 0.15);
+      --warn: #e76c6c;
+      --line: rgba(255, 255, 255, 0.08);
+      --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+
+      --diff-panel-bg: rgba(17, 28, 23, 0.55);
+      --diff-panel-border: rgba(255, 255, 255, 0.08);
+      --diff-summary-bg: rgba(255, 255, 255, 0.05);
+      --diff-add-bg: rgba(39, 133, 68, 0.15);
+      --diff-add-border: #278544;
+      --diff-add-text: #69c586;
+      --diff-sub-bg: rgba(209, 48, 48, 0.15);
+      --diff-sub-border: #d13030;
+      --diff-sub-text: #e77c7c;
+      --diff-mod-bg: rgba(181, 137, 0, 0.15);
+      --diff-mod-border: #b58900;
+      --diff-mod-text: #e6b72a;
+    }
+
+    [data-theme="dark"] input:-webkit-autofill,
+    [data-theme="dark"] select:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 1000px var(--card) inset !important;
+      -webkit-text-fill-color: var(--ink) !important;
+    }
+
+    [data-theme="dark"] ::placeholder {
+      color: var(--muted);
+      opacity: 1;
+    }
+
+    [data-theme="dark"] body {
+      background:
+        radial-gradient(circle at 15% -10%, rgba(14, 180, 114, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 0%, rgba(4, 133, 168, 0.06) 0%, transparent 40%),
+        var(--bg);
+      background-attachment: fixed;
+    }
+
+    [data-theme="dark"] .nav-tab:hover {
+      background: rgba(22, 36, 29, 0.7);
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] .history-card {
+      background: var(--card);
+      border-color: var(--line);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    [data-theme="dark"] .history-card:hover {
+      background: rgba(22, 36, 29, 0.7);
+    }
+
+    [data-theme="dark"] .history-card.active {
+      background: rgba(22, 53, 40, 0.75);
+    }
+
+    [data-theme="dark"] .panel {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    [data-theme="dark"] input,
+    [data-theme="dark"] select {
+      background: var(--card);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] .option-card {
+      background: var(--card);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .check-item {
+      background: var(--card);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .check-item code {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] .toggle-more {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .flag-library {
+      background: rgba(0, 0, 0, 0.2);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .flag-section {
+      background: var(--card);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .flag-section summary {
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] .selected-details {
+      background: var(--card);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .selected-flag {
+      background: rgba(22, 53, 40, 0.75);
+      border-left-color: var(--accent);
+    }
+
+    [data-theme="dark"] .selected-flag.missing {
+      background: rgba(231, 108, 108, 0.1);
+      border-left-color: var(--warn);
+    }
+
+    [data-theme="dark"] .selected-flag code {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] .clear {
+      background: var(--card);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    [data-theme="dark"] .status {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] .status.error {
+      background: rgba(231, 108, 108, 0.1);
+      color: var(--warn);
+    }
+
+    [data-theme="dark"] .chip {
+      background: var(--accent-soft);
+      color: var(--ink);
+      border-color: var(--accent);
+    }
+
+    [data-theme="dark"] .table-wrap {
+      background: transparent;
+    }
+
+    [data-theme="dark"] th {
+      background: rgba(22, 33, 28, 0.85);
+      color: var(--muted);
+    }
+
+    [data-theme="dark"] th,
+    [data-theme="dark"] td {
+      border-bottom-color: var(--line);
+    }
+
+    [data-theme="dark"] .meta-item {
+      background: var(--card);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .detail-wrap {
+      background: var(--card);
+      border-color: var(--line);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    [data-theme="dark"] .host-card {
+      background: var(--card);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .pill {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] .raw {
+      background: rgba(0, 0, 0, 0.4);
+      color: var(--accent);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .compare-box {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--ink);
+    }
+
+    [data-theme="dark"] .diff-host-panel {
+      background: var(--diff-panel-bg);
+      border-color: var(--diff-panel-border);
+      box-shadow: none;
+    }
+
+    [data-theme="dark"] .diff-host-header {
+      border-bottom-color: var(--line);
+    }
+
+    [data-theme="dark"] .compare-summary-wrapper {
+      background: var(--card);
+      border-color: var(--line);
+    }
+
+    [data-theme="dark"] .results-filter-box {
+      background: var(--card);
+      border-bottom-color: var(--line);
+    }
+
+    [data-theme="dark"] .diff-warning-box {
+      background: rgba(181, 137, 0, 0.15);
+      color: #e6b72a;
+      border-left-color: #b58900;
+    }
+
+    .theme-toggle {
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="dark"] .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .compare-box {
+      background: white;
+      padding: 8px;
+      border-left: 3px solid #888;
+      border-radius: 4px;
+    }
+
+    .compare-box.newer {
+      border-left-color: var(--accent);
+    }
+
+    .diff-host-panel {
+      border: 1px solid #d9e5da;
+      border-radius: 8px;
+      padding: 16px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+
+    .diff-host-header {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #edf1eb;
+      padding-bottom: 8px;
+    }
+
+    .compare-summary-wrapper {
+      margin-bottom: 16px;
+      background: #fbfefb;
+      padding: 12px;
+      border: 1px solid #d9e5da;
+      border-radius: 8px;
+    }
+
+    .results-filter-box {
+      padding: 10px;
+      border-bottom: 1px solid #edf1eb;
+      background: #fbfefb;
+    }
+
+    .diff-warning-box {
+      background: #fff3cd;
+      color: #856404;
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 4px solid #ffeeba;
+    }
+
     @media (max-width: 900px) {
       .grid {
         grid-template-columns: 1fr;
@@ -614,8 +915,25 @@
 <body>
   <main class="shell">
     <div class="header-content">
-      <header class="header">
+      <header class="header" style="display: flex; align-items: center; gap: 12px;">
         <h1 class="title">Nmap Insight</h1>
+        <button class="theme-toggle" id="theme-toggle" title="Toggle Dark Mode">
+          <svg id="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg id="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden>
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
       </header>
       <nav class="top-nav">
         <button class="nav-tab active" id="tab-scanner" onclick="switchView('scanner')">Scanner</button>
@@ -734,9 +1052,8 @@
         </div>
         <p class="section-title">Parsed host/port output</p>
         <div class="table-wrap">
-          <div style="padding: 10px; border-bottom: 1px solid #edf1eb; background: #fbfefb;">
-            <input type="text" id="filter-ports" placeholder="Filter by port (e.g. 80, 443)..."
-              style="max-width: 300px; padding: 6px 10px; font-size: 0.85rem;">
+          <div class="results-filter-box">
+            <input type="text" id="filter-ports" class="filter-input" placeholder="Filter by port (e.g. 80, 443)...">
           </div>
           <table>
             <thead>
@@ -780,21 +1097,44 @@
       </div>
       <div style="margin-bottom: 20px;">
         <input type="text" id="filter-history" placeholder="Search targets or flags..."
-          style="width: 100%; max-width: 300px; padding: 8px 10px; font-size: 0.85rem; border: 1px solid #d9e0d8; border-radius: 4px;">
+          style="width: 100%; max-width: 300px; padding: 8px 10px; font-size: 0.85rem; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 4px;">
       </div>
       <div id="history-list" class="history-grid-view">Loading...</div>
     </section>
 
     <section id="view-compare" class="panel" hidden>
       <h2 style="margin-bottom: 20px;">Scan Comparison Diff</h2>
-      <div id="compare-summary"
-        style="margin-bottom: 16px; background: #fbfefb; padding: 12px; border: 1px solid #d9e5da; border-radius: 8px;">
+      <div id="compare-summary" class="compare-summary-wrapper">
         Select exactly two scans from the History tab and click "Compare 2 Scans".</div>
       <div id="compare-body"></div>
     </section>
   </main>
 
   <script>
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    const iconMoon = document.getElementById('icon-moon');
+    const iconSun = document.getElementById('icon-sun');
+    if (currentTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      iconMoon.hidden = true;
+      iconSun.hidden = false;
+    }
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        iconMoon.hidden = false;
+        iconSun.hidden = true;
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        iconMoon.hidden = true;
+        iconSun.hidden = false;
+      }
+    });
+
+    const API_URL = "http://127.0.0.1:8000";
     const form = document.getElementById("scan-form");
     const statusBox = document.getElementById("status");
     const commandChip = document.getElementById("command-chip");
@@ -1652,11 +1992,11 @@
         const summaryHtml = `
           <strong>Compare Mode</strong><br>
           <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.9em; margin-top: 12px;">
-            <div style="background: white; padding: 8px; border-left: 3px solid #888;">
-              <strong>Older Scan:</strong> ${escapeHtml(oldScan.target)} <span style="color: #666;">(${new Date(oldScan.timestamp).toLocaleString()})</span>
+            <div class="compare-box">
+              <strong>Older Scan:</strong> ${escapeHtml(oldScan.target)} <span style="color: var(--muted, #666);">(${new Date(oldScan.timestamp).toLocaleString()})</span>
             </div>
-            <div style="background: white; padding: 8px; border-left: 3px solid var(--accent);">
-              <strong>Newer Scan:</strong> ${escapeHtml(newScan.target)} <span style="color: #666;">(${new Date(newScan.timestamp).toLocaleString()})</span>
+            <div class="compare-box newer">
+              <strong>Newer Scan:</strong> ${escapeHtml(newScan.target)} <span style="color: var(--muted, #666);">(${new Date(newScan.timestamp).toLocaleString()})</span>
             </div>
           </div>
         `;
@@ -1676,23 +2016,23 @@
 
     function renderDiffRow(type, message, val1, val2) {
       if (type === '+') {
-        return `<div style="display: flex; gap: 12px; margin-bottom: 4px; border-left: 3px solid #278544; background: #eaf5ec; padding: 6px 12px; border-radius: 4px;">
-                  <span style="color: #176b32; font-weight: bold; width: 20px;">+</span>
-                  <span style="color: #114d24; flex: 1;">${message}</span>
+        return `<div style="display: flex; gap: 12px; margin-bottom: 4px; border-left: 3px solid var(--diff-add-border, #278544); background: var(--diff-add-bg, #eaf5ec); padding: 6px 12px; border-radius: 4px;">
+                  <span style="color: var(--diff-add-border, #176b32); font-weight: bold; width: 20px;">+</span>
+                  <span style="color: var(--diff-add-text, #114d24); flex: 1;">${message}</span>
                 </div>`;
       } else if (type === '-') {
-        return `<div style="display: flex; gap: 12px; margin-bottom: 4px; border-left: 3px solid #d13030; background: #fcebeb; padding: 6px 12px; border-radius: 4px;">
-                  <span style="color: #b32626; font-weight: bold; width: 20px;">-</span>
-                  <span style="color: #8c1e1e; flex: 1;">${message}</span>
+        return `<div style="display: flex; gap: 12px; margin-bottom: 4px; border-left: 3px solid var(--diff-sub-border, #d13030); background: var(--diff-sub-bg, #fcebeb); padding: 6px 12px; border-radius: 4px;">
+                  <span style="color: var(--diff-sub-border, #b32626); font-weight: bold; width: 20px;">-</span>
+                  <span style="color: var(--diff-sub-text, #8c1e1e); flex: 1;">${message}</span>
                 </div>`;
       } else if (type === '~') {
         const v1Html = (val1.includes('\\n') || val1.length > 50) ? `<pre style="margin: 0; white-space: pre-wrap; font-family: monospace; font-size: 0.85em;">${val1}</pre>` : val1;
         const v2Html = (val2.includes('\\n') || val2.length > 50) ? `<pre style="margin: 0; white-space: pre-wrap; font-family: monospace; font-size: 0.85em;">${val2}</pre>` : val2;
-        return `<div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; border-left: 3px solid #b58900; background: #fdf6e3; padding: 8px 12px; border-radius: 4px;">
-                  <div style="color: #926f00; font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">~ ${message}</div>
+        return `<div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; border-left: 3px solid var(--diff-mod-border, #b58900); background: var(--diff-mod-bg, #fdf6e3); padding: 8px 12px; border-radius: 4px;">
+                  <div style="color: var(--diff-mod-text, #926f00); font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">~ ${message}</div>
                   <div style="display: flex; gap: 12px; font-size: 0.85rem;">
-                    <div style="flex: 1; min-width: 0; background: #fcebeb; color: #b32626; padding: 6px 10px; border-radius: 4px; border-left: 2px solid #d13030; overflow-wrap: break-word;"><strong>[-] Old</strong><div style="margin-top:4px;">${v1Html}</div></div>
-                    <div style="flex: 1; min-width: 0; background: #eaf5ec; color: #176b32; padding: 6px 10px; border-radius: 4px; border-left: 2px solid #278544; overflow-wrap: break-word;"><strong>[+] New</strong><div style="margin-top:4px;">${v2Html}</div></div>
+                    <div style="flex: 1; min-width: 0; background: var(--diff-sub-bg, #fcebeb); color: var(--diff-sub-text, #b32626); padding: 6px 10px; border-radius: 4px; border-left: 2px solid var(--diff-sub-border, #d13030); overflow-wrap: break-word;"><strong>[-] Old</strong><div style="margin-top:4px;">${v1Html}</div></div>
+                    <div style="flex: 1; min-width: 0; background: var(--diff-add-bg, #eaf5ec); color: var(--diff-add-text, #176b32); padding: 6px 10px; border-radius: 4px; border-left: 2px solid var(--diff-add-border, #278544); overflow-wrap: break-word;"><strong>[+] New</strong><div style="margin-top:4px;">${v2Html}</div></div>
                   </div>
                 </div>`;
       }
@@ -1745,9 +2085,9 @@
       let html = `<div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">`;
 
       if (oldScan.target.toLowerCase() !== newScan.target.toLowerCase()) {
-        html += `<div style="background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; border-left: 4px solid #ffeeba;">
+        html += `<div class="diff-warning-box">
             <strong>Heads up:</strong> You are comparing scans for two different targets (<code>${escapeHtml(oldScan.target)}</code> vs <code>${escapeHtml(newScan.target)}</code>). Because these are two separate endpoints, the comparison engine will natively show the old servers as disappearing (DOWN) and the new ones as appearing newly (UP).
-         </div>`;
+          </div>`;
       }
 
       for (const ip of allIps) {
@@ -1845,8 +2185,8 @@
         : `<div style="color: #666; padding: 4px 8px; font-style: italic;">No visible state, service, hostnames, or fingerprint changes detected.</div>`;
 
       return `
-        <div style="border: 1px solid #d9e5da; border-radius: 8px; padding: 16px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-          <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid #edf1eb; padding-bottom: 8px;">
+        <div class="diff-host-panel">
+          <div class="diff-host-header">
             ${escapeHtml(ip)}
           </div>
           <div style="font-family: inherit; font-size: 0.95em; line-height: 1.6; display: flex; flex-direction: column; gap: 4px;">
