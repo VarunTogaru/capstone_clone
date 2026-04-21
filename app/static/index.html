@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nmap Insight Demo</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root {
       --bg: #f5f7ef;
@@ -415,6 +416,11 @@
       cursor: pointer;
     }
 
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed !important;
+    }
+
     .run {
       background: var(--accent);
       color: #fff;
@@ -717,7 +723,15 @@
       </article>
 
       <article class="panel">
-        <h2>Results</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2 style="margin: 0;">Results</h2>
+          <div style="display: flex; gap: 8px;">
+            <button id="export-json-btn" class="clear" style="padding: 6px 10px; font-size: 0.8rem;" disabled>Export
+              JSON</button>
+            <button id="export-pdf-btn" class="clear" style="padding: 6px 10px; font-size: 0.8rem;" disabled>Export
+              PDF</button>
+          </div>
+        </div>
         <p class="section-title">Parsed host/port output</p>
         <div class="table-wrap">
           <div style="padding: 10px; border-bottom: 1px solid #edf1eb; background: #fbfefb;">
@@ -791,11 +805,15 @@
     const runBtn = document.getElementById("run-btn");
     const stopBtn = document.getElementById("stop-btn");
     const clearBtn = document.getElementById("clear-btn");
+    const exportJsonBtn = document.getElementById("export-json-btn");
+    const exportPdfBtn = document.getElementById("export-pdf-btn");
     const beginnerFlagsNode = document.getElementById("beginner-flags");
     const allFlagsPanel = document.getElementById("all-flags-panel");
     const allFlagSectionsNode = document.getElementById("all-flag-sections");
     const toggleMoreFlagsBtn = document.getElementById("toggle-more-flags");
     const selectedFlagDetailsNode = document.getElementById("selected-flag-details");
+
+    let lastScanData = null;
     const filterPortsInput = document.getElementById("filter-ports");
 
     let currentHostsData = [];
@@ -1438,6 +1456,9 @@
         renderMeta(data);
         renderDetections(data);
         rawJson.textContent = JSON.stringify(data, null, 2);
+        lastScanData = data;
+        exportJsonBtn.disabled = false;
+        exportPdfBtn.disabled = false;
         setStatus("Scan completed.");
         fetchHistory();
       } catch (error) {
@@ -1476,9 +1497,69 @@
       resultBody.innerHTML = `<tr><td colspan="7">No scan results yet.</td></tr>`;
       scanMeta.innerHTML = `<div class="meta-item"><strong>Status</strong>Waiting for first scan.</div>`;
       detectionBody.textContent = "No detection details yet.";
+      lastScanData = null;
+      exportJsonBtn.disabled = true;
+      exportPdfBtn.disabled = true;
       if (filterPortsInput) filterPortsInput.value = "";
       setStatus("Ready.");
       refreshFlagUi();
+    });
+
+    exportJsonBtn.addEventListener("click", () => {
+      if (!lastScanData) return;
+      const jsonStr = JSON.stringify(lastScanData, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `scan-results-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    exportPdfBtn.addEventListener("click", () => {
+      if (!lastScanData) return;
+      const element = document.createElement('div');
+
+      const resultBodyClone = document.querySelector('.table-wrap').cloneNode(true);
+      const scanMetaClone = scanMeta.cloneNode(true);
+      const detectionBodyClone = detectionBody.cloneNode(true);
+
+      element.innerHTML = `
+        <div style="font-family: sans-serif; padding: 20px; color: #1e2a1f;">
+          <h1 style="color: #18624b; border-bottom: 2px solid #dce5d8; padding-bottom: 10px;">Nmap Scan Results</h1>
+          <h2 style="font-size: 14px; color: #50644f; margin-top: 20px;">Scan Metadata</h2>
+          ${scanMetaClone.outerHTML}
+          <h2 style="font-size: 14px; color: #50644f; margin-top: 20px;">Parsed host/port output</h2>
+          ${resultBodyClone.outerHTML}
+          <h2 style="font-size: 14px; color: #50644f; margin-top: 20px;">Detection Details</h2>
+          ${detectionBodyClone.outerHTML}
+        </div>
+      `;
+
+      const opt = {
+        margin: 10,
+        filename: `scan-results-${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      const originalText = exportPdfBtn.textContent;
+      exportPdfBtn.textContent = "Exporting...";
+      exportPdfBtn.disabled = true;
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        exportPdfBtn.textContent = originalText;
+        exportPdfBtn.disabled = false;
+      }).catch(err => {
+        console.error("PDF Export Error:", err);
+        exportPdfBtn.textContent = originalText;
+        exportPdfBtn.disabled = false;
+        alert("Failed to export PDF.");
+      });
     });
 
     form.addEventListener("input", refreshFlagUi);
