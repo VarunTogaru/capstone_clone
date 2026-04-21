@@ -48,23 +48,42 @@ async def run_nmap_xml(req: Request) -> str:
     args = build_nmap_args(req)
     logger.info("Running nmap: %s", " ".join(args))
 
-    proc = await asyncio.create_subprocess_exec(
-        *args,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        is_async_proc = True
+    except NotImplementedError:
+        import subprocess
+        proc = subprocess.Popen(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        is_async_proc = False
+        
     if req.request_id:
         RUNNING_PROCESSES[req.request_id] = proc
 
     try:
-        stdout, stderr = await asyncio.wait_for(
-            proc.communicate(),
-            timeout=req.timeout_seconds,
-        )
+        if is_async_proc:
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(),
+                timeout=req.timeout_seconds,
+            )
+        else:
+            stdout, stderr = await asyncio.wait_for(
+                asyncio.to_thread(proc.communicate),
+                timeout=req.timeout_seconds,
+            )
     except asyncio.TimeoutError as exc:
         proc.kill()
-        await proc.communicate()
+        if is_async_proc:
+            await proc.communicate()
+        else:
+            proc.communicate()
         logger.warning("Nmap scan timed out after %ds", req.timeout_seconds)
         raise RuntimeError("SCAN_TIMEOUT: scan exceeded timeout") from exc
     finally:
@@ -77,8 +96,15 @@ async def run_nmap_xml(req: Request) -> str:
 
     # If the process was externally killed but not due to a timeout, it will have a negative return code.
     if proc.returncode != 0:
-        stderr_text = stderr.decode(errors="ignore")
-        logger.error("Nmap failed (rc=%d): %s", proc.returncode, stderr_text)
-        raise RuntimeError(stderr_text or "Nmap failed")
+        stderr_text = stderr.decode(errors="ignore").strip()
+        stdout_text = stdout.decode(errors="ignore").strip()
+        
+        error_msg = stderr_text or stdout_text or f"Nmap failed with return code {proc.returncode}"
+        
+        if "requires root privileges" in error_msg.lower() or "failed to open device" in error_msg.lower():
+            error_msg = "ELEVATED_PRIVILEGES_REQUIRED: This scan requires elevated privileges. Please check 'Use privileged helper mode' (Advanced)."
+            
+        logger.error("Nmap failed (rc=%d): %s", proc.returncode, error_msg)
+        raise RuntimeError(error_msg)
 
     return stdout.decode(errors="ignore")
