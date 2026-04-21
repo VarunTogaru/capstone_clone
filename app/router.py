@@ -35,9 +35,11 @@ async def scan(req: Request):
         return result
     except RuntimeError as e:
         message = str(e)
-        logger.error("Scan failed: target=%s error=%s", req.target, message)
+        logger.error("Scan failed: target=%s e=%r message=%r", req.target, e, message)
         if message.startswith("ELEVATED_FLAG_NOT_ALLOWED"):
             raise HTTPException(status_code=400, detail=message)
+        if message.startswith("ELEVATED_PRIVILEGES_REQUIRED"):
+            raise HTTPException(status_code=403, detail=message)
         if message.startswith("HELPER_NOT_AVAILABLE"):
             raise HTTPException(status_code=503, detail=message)
         if message.startswith("SCAN_TIMEOUT"):

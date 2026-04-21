@@ -1407,7 +1407,12 @@
 
     function errorDetail(data) {
       if (!data) return "Scan failed";
-      if (typeof data.detail === "string") return data.detail;
+      if (typeof data.detail === "string") {
+        return data.detail.trim() || "Scan failed: Server encountered an error without details";
+      }
+      if (Array.isArray(data.detail)) {
+        return data.detail.map(err => err.msg || "Validation error").join("; ");
+      }
       if (data.detail?.errors?.length) return data.detail.errors.join("; ");
       if (data.detail?.stderr) return data.detail.stderr;
       if (data.detail?.code) return data.detail.code;
