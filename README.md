@@ -1,7 +1,7 @@
 # Nmap Insight
 
 Nmap Insight is a local-first web application for building and running Nmap
-scans with a guided UI and structured results output.
+scans with a guided UI and structured results output
 
 ## Current Status
 
